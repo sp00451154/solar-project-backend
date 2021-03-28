@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const db = require('./config/config').get(process.env.NODE_ENV);
 const User = require('./models/user');
 const QuestionAnswer = require('./models/quest-ans');
+const TopicList = require('./models/topics');
 const {
     auth
 } = require('./middlewares/auth');
@@ -145,7 +146,30 @@ app.get('/api/logout', auth, function (req, res) {
 
 });
 
-app.post('/api/uploadRecord', function (req, res) {
+app.post('/api/uploadTopics', function (req, res) {
+    const dataToUpload = new TopicList(req.body);
+    dataToUpload.save(function (err, response) {
+        if (err) return cb(err);
+        if (response) return res.status(200).json({
+            message: 'Successfully Uploaded the topics.',
+            successID: response._id
+        })
+        cb(null, res);
+    })
+})
+app.get('/api/getAllTopics', function (req, res) {
+    TopicList.find(function (err, response) {
+
+        if (err) return res.status(200).json({
+            message: 'Error in fetching the topics.'
+        });
+        if (response) return res.status(200).json({
+            message: 'Successfully Fetched all the topics.',
+            data: response
+        })
+    })
+})
+app.post('/api/uploadQA', function (req, res) {
     const dataToUpload = new QuestionAnswer(req.body);
     dataToUpload.save(function (err, response) {
         if (err) return cb(err);
@@ -156,17 +180,37 @@ app.post('/api/uploadRecord', function (req, res) {
         cb(null, res);
     })
 })
-// app.get('/api/getAllRecord', function (req, res) {
-//     QuestionAnswer.find(function (err, response) {
-//         if (err) return res.status(200).json({
-//             message: 'Error in fetching the records.'
-//         });
-//         if (response) return res.status(200).json({
-//             message: 'Successfully Fetched the record.',
-//             successData: response
-//         })
-//     })
-// })
+app.get('/api/getAllQA', function (req, res) {
+    QuestionAnswer.aggregate((
+        [{
+            $group: {
+                _id: "$topic",
+                count: { $sum: 1 }
+             }
+        }]
+    ),function (err, response) {
+
+        if (err) return res.status(200).json({
+            message: 'Error in fetching the records.'
+        });
+        if (response) return res.status(200).json({
+            message: 'Successfully Fetched all the record.',
+            data: response
+        })
+    })
+})
+app.post('/api/getTopicWiseQA', function (req, res) {
+    QuestionAnswer.find({'topic': req.body.topic},function (err, response) {
+        if (err) return res.status(200).json({
+            message: 'Error in fetching the records.'
+        });
+        if (response) return res.status(200).json({
+            message: `Successfully Fetched all the records for ${req.body.topic}.`,
+            successData: response,
+            totalRecord: response.length
+        })
+    })
+})
 app.get('/api/getAllRecord',auth, function (req, res) {
     if(!req.user.isAdmin) {
         return res.status(200).json({
