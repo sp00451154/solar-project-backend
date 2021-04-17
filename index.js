@@ -6,6 +6,7 @@ const db = require('./config/config').get(process.env.NODE_ENV);
 const User = require('./models/user');
 const QuestionAnswer = require('./models/quest-ans');
 const TopicList = require('./models/topics');
+const ExpanseUpload = require('./models/expanseUpload');
 const {
     auth
 } = require('./middlewares/auth');
@@ -157,6 +158,38 @@ app.post('/api/uploadTopics', function (req, res) {
         cb(null, res);
     })
 })
+app.post('/api/expanseUpload', function (req, res) {
+    const updateExpanse = new ExpanseUpload(req.body);
+    updateExpanse.save(function (err, response) {
+        if (err) return cb(err);
+        if (response) return res.status(200).json({
+            message: 'Successfully Uploaded the expanses.',
+            successID: response._id
+        })
+        cb(null, res);
+    })
+})
+app.post('/api/getExpanses', function (req, res) {
+    ExpanseUpload.aggregate((
+        [
+            { $match: 
+                { name:  {
+                    $in: req.body.names
+                } } 
+            },
+            { $group: { _id: "$name", total: { $sum: "$spentAmount" } } },
+         ]
+    ),function (err, response) {
+
+        if (err) return res.status(200).json({
+            message: 'Error in fetching the records.'
+        });
+        if (response) return res.status(200).json({
+            message: 'Successfully Fetched all the record.',
+            data: response
+        })
+    })
+})
 app.get('/api/getAllTopics', function (req, res) {
     TopicList.find(function (err, response) {
 
@@ -169,7 +202,7 @@ app.get('/api/getAllTopics', function (req, res) {
         })
     })
 })
-app.post('/api/uploadQA', function (req, res) {
+app.post('/api/uploadNote', function (req, res) {
     const dataToUpload = new QuestionAnswer(req.body);
     dataToUpload.save(function (err, response) {
         if (err) return cb(err);
@@ -180,7 +213,7 @@ app.post('/api/uploadQA', function (req, res) {
         cb(null, res);
     })
 })
-app.get('/api/getAllQA', function (req, res) {
+app.get('/api/getAllNote', function (req, res) {
     QuestionAnswer.aggregate((
         [{
             $group: {
@@ -199,7 +232,7 @@ app.get('/api/getAllQA', function (req, res) {
         })
     })
 })
-app.post('/api/getTopicWiseQA', function (req, res) {
+app.post('/api/getTopicWiseNote', function (req, res) {
     QuestionAnswer.find({'topic': req.body.topic},function (err, response) {
         if (err) return res.status(200).json({
             message: 'Error in fetching the records.'
