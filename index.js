@@ -7,6 +7,8 @@ const User = require('./models/user');
 const QuestionAnswer = require('./models/quest-ans');
 const TopicList = require('./models/topics');
 const ExpanseUpload = require('./models/expanseUpload');
+const commonExpanseUpload = require('./models/commonExpanseUpload');
+const RoommateSchema = require('./models/roommateSchema')
 const {
     auth
 } = require('./middlewares/auth');
@@ -150,25 +152,26 @@ app.get('/api/logout', auth, function (req, res) {
 app.post('/api/uploadTopics', function (req, res) {
     const dataToUpload = new TopicList(req.body);
     dataToUpload.save(function (err, response) {
-        if (err) return cb(err);
+        // if (err) return cb(err);
         if (response) return res.status(200).json({
             message: 'Successfully Uploaded the topics.',
             successID: response._id
         })
-        cb(null, res);
+        // cb(null, res);
     })
 })
 app.post('/api/expanseUpload', function (req, res) {
     const updateExpanse = new ExpanseUpload(req.body);
     updateExpanse.save(function (err, response) {
-        if (err) return cb(err);
+        // if (err) return cb(err);
         if (response) return res.status(200).json({
             message: 'Successfully Uploaded the expanses.',
             successID: response._id
         })
-        cb(null, res);
+        // cb(null, res);
     })
 })
+
 app.post('/api/getExpanses', function (req, res) {
     ExpanseUpload.aggregate((
         [
@@ -190,6 +193,41 @@ app.post('/api/getExpanses', function (req, res) {
         })
     })
 })
+
+app.get('/api/getAllExpanses', function (req, res) {
+    ExpanseUpload.find(function (err, response) {
+
+        if (err) return res.status(200).json({
+            message: 'Error in fetching the Expanses.'
+        });
+        if (response) return res.status(200).json({
+            message: 'Successfully Fetched all the Expanses.',
+            data: response
+        })
+    })
+})
+app.post('/api/commonExpanseUpload', function (req, res) {
+    const _commonExpanseUpload = new commonExpanseUpload(req.body);
+    _commonExpanseUpload.save(function (err, response) {
+        // if (err) return cb(err);
+        if (response) return res.status(200).json({
+            message: 'Successfully Uploaded the common expanse.',
+            successID: response._id
+        })
+        // cb(null, res);
+    })
+})
+app.get('/api/getAllCommonExpanses', function (req, res) {
+    commonExpanseUpload.find(function (err, response) {
+        if (err) return res.status(200).json({
+            message: 'Error in fetching the Common Expanses.'
+        });
+        if (response) return res.status(200).json({
+            message: 'Successfully Fetched all the Common Expanses.',
+            data: response
+        })
+    })
+})
 app.get('/api/getAllTopics', function (req, res) {
     TopicList.find(function (err, response) {
 
@@ -205,12 +243,12 @@ app.get('/api/getAllTopics', function (req, res) {
 app.post('/api/uploadNote', function (req, res) {
     const dataToUpload = new QuestionAnswer(req.body);
     dataToUpload.save(function (err, response) {
-        if (err) return cb(err);
+        // // if (err) return cb(err);
         if (response) return res.status(200).json({
             message: 'Successfully Uploaded the record.',
             successID: response._id
         })
-        cb(null, res);
+        // cb(null, res);
     })
 })
 app.get('/api/getAllNote', function (req, res) {
@@ -318,6 +356,157 @@ app.post('/api/updateARecord',auth, function (req, res) {
             }
         }
 
+    })
+})
+app.post('/api/addARoommate', function (req, res) {
+    const dataToUpload = new RoommateSchema(req.body);
+    dataToUpload.save(function (err, response) {
+        // // if (err) return cb(err);
+        if (response) return res.status(200).json({
+            message: 'Successfully Uploaded the roommate.',
+            successID: response._id
+        })
+        // cb(null, res);
+    })
+})
+app.get('/api/getAllRoommates', function (req, res) {
+    RoommateSchema.find(function (err, response) {
+        if (err) return res.status(200).json({
+            message: 'Error in fetching the roommates.'
+        });
+        if (response) return res.status(200).json({
+            message: 'Successfully Fetched all the roommate names.',
+            data: response
+        })
+    })
+})
+app.post('/api/deleteARoommate',auth, function (req, res) {
+    // if(!req.user.isAdmin) {
+    //     return res.status(200).json({
+    //         message: 'Please Login as Admin to Delete the record',
+    //         allow : false
+    //     });
+    // }
+    var payload = {_id : req.body._id}
+    RoommateSchema.deleteOne(payload,function (err, response) {
+        if (err) return res.status(200).json({
+            message: 'Error in deleting the roommate.'
+        });
+        if (response) return res.status(200).json({
+            message: 'Successfully Deleted the roommate.',
+            successData: response
+        })
+    })
+})
+app.post('/api/updateAExpanse', function (req, res) {
+    // if(!req.user.isAdmin) {
+    //     return res.status(200).json({
+    //         message: 'Please Login as Admin to update the record',
+    //         allow : false
+    //     });
+    // }
+    var payload = {
+        _id: req.body._id
+    }
+    var upDatedExpanse = {
+        $set: {
+            spentAmount: req.body.spentAmount,
+            spentOn: req.body.spentOn,
+            // isAdmin: req.body.role==1 ? true : false,
+        }
+    };
+    ExpanseUpload.updateOne(payload, upDatedExpanse, function (err, response) {
+        if (err) return res.status(200).json({
+            message: 'Error in updating the record.',
+            error: err,
+        });
+        if (response) {
+            if (response.n > 0 ) {
+                return res.status(200).json({
+                    message: 'Successfully updated the Expanse.',
+                    successData: response
+                })
+            } else if (response.n == 0 ) {
+                return res.status(200).json({
+                    message: 'Record not found.',
+                    successData: response
+                })
+            }
+        }
+
+    })
+});
+app.post('/api/updateACommonExpanse', function (req, res) {
+    // if(!req.user.isAdmin) {
+    //     return res.status(200).json({
+    //         message: 'Please Login as Admin to update the record',
+    //         allow : false
+    //     });
+    // }
+    var payload = {
+        _id: req.body._id
+    }
+    var upDatedExpanse = {
+        $set: {
+            expanseAmount: req.body.expanseAmount,
+            // isAdmin: req.body.role==1 ? true : false,
+        }
+    };
+    commonExpanseUpload.updateOne(payload, upDatedExpanse, function (err, response) {
+        if (err) return res.status(200).json({
+            message: 'Error in updating the record.',
+            error: err,
+        });
+        if (response) {
+            if (response.n > 0 ) {
+                return res.status(200).json({
+                    message: 'Successfully updated the common Expanse.',
+                    successData: response
+                })
+            } else if (response.n == 0 ) {
+                return res.status(200).json({
+                    message: 'Record not found.',
+                    successData: response
+                })
+            }
+        }
+
+    })
+});
+app.post('/api/deleteAExpanse', function (req, res) {
+    // if(!req.user.isAdmin) {
+    //     return res.status(200).json({
+    //         message: 'Please Login as Admin to Delete the record',
+    //         allow : false
+    //     });
+    // }
+    var payload = {_id : req.body._id}
+    ExpanseUpload.deleteOne(payload,function (err, response) {
+        if (err) return res.status(200).json({
+            message: 'Error in deleting the record.'
+        });
+        if (response) return res.status(200).json({
+            message: 'Successfully Deleted the expanse.',
+            successData: response
+        })
+    })
+})
+app.post('/api/deleteACommonExpanse', function (req, res) {
+    // if(!req.user.isAdmin) {
+    //     return res.status(200).json({
+    //         message: 'Please Login as Admin to Delete the record',
+    //         allow : false
+    //     });
+    // }
+    var payload = {_id : req.body._id}
+    commonExpanseUpload.deleteOne(payload,function (err, response) {
+        if (err) return res.status(200).json({
+            message: 'Error in deleting the common expanse.'
+        });
+        if (response) return res.status(200).json({
+            message: 'Successfully Deleted the common expanse.',
+            successData: response
+        })
     })
 })
 
