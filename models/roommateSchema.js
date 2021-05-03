@@ -1,14 +1,18 @@
 var mongoose = require('mongoose');
 
-const roommateUpload = mongoose.Schema({
+const roommateSchema = mongoose.Schema({
     expanseAmount: {
         type: Number,
         required: true,
     },
-    name: {
+    value: {
+        type: String,
+        required: true,
+    },
+    displayName: {
         type: String,
         required: true,
     }
 
 });
-module.exports = mongoose.model('RoommateSchema', roommateUpload);
+module.exports = mongoose.model('RoommateSchema', roommateSchema);

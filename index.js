@@ -359,9 +359,11 @@ app.post('/api/updateARecord',auth, function (req, res) {
     })
 })
 app.post('/api/addARoommate', function (req, res) {
-    const dataToUpload = new RoommateSchema(req.body);
-    dataToUpload.save(function (err, response) {
-        // // if (err) return cb(err);
+    const roommateObj = new RoommateSchema(req.body);
+    roommateObj.save(function (err, response) {
+        if (err) return res.status(400).json({
+        message: 'Not success',
+        });
         if (response) return res.status(200).json({
             message: 'Successfully Uploaded the roommate.',
             successID: response._id
@@ -380,7 +382,7 @@ app.get('/api/getAllRoommates', function (req, res) {
         })
     })
 })
-app.post('/api/deleteARoommate',auth, function (req, res) {
+app.post('/api/deleteARoommate', function (req, res) {
     // if(!req.user.isAdmin) {
     //     return res.status(200).json({
     //         message: 'Please Login as Admin to Delete the record',
